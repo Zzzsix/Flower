@@ -1,0 +1,143 @@
+﻿<Window x:Class="AssetManager.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AssetManager"
+        xmlns:vm="clr-namespace:AssetManager.ViewModels"
+        xmlns:controls="clr-namespace:AssetManager.Controls"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+
+    <Window.DataContext>
+        <vm:MainViewModel/>
+    </Window.DataContext>
+    
+    <Window.Resources>
+        <!--确保进度条可见性的绑定可以使用-->
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+
+        <Style TargetType="MenuItem">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="10"/>
+        </Style>
+
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="10"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="15"/>
+        </Grid.RowDefinitions>
+
+        <Menu Grid.Row="0" Background="#5d4e64">
+
+            <MenuItem Header="_文件" Height="22" Background="#5d4e64">
+                <MenuItem Header="打开文件夹..." Command="{Binding OpenFolderCommand}"/>
+                <Separator/>
+                <MenuItem Header="退出" Command="{Binding ExitApplicationCommand}"/>
+            </MenuItem>
+            
+        </Menu>
+
+        <!--主显示区-->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="160" MinWidth="30" MaxWidth="640"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!--左侧文件夹树-->
+            <TreeView Grid.Column="0"
+                      Background="#4A3E4F"
+                      BorderThickness="0"
+                      ItemsSource="{Binding FolderTree}"
+                      SelectedItemChanged="TreeView_SelectedItemChanged">
+
+                <TreeView.ItemTemplate>
+                    <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                        <TextBlock Text="{Binding Name}"/>
+                    </HierarchicalDataTemplate>
+                </TreeView.ItemTemplate>
+            </TreeView>
+
+            <!--拖拽分割线-->
+            <GridSplitter Grid.Column="1"
+                          Width="2"
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Stretch"
+                          ResizeBehavior="PreviousAndNext"
+                          Background="#DDD"/>
+
+            <!--缩略图显示-->
+            <ScrollViewer Grid.Column="2" Background="#806c89">
+                <ItemsControl ItemsSource="{Binding Resources}">
+
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <controls:MasonryPanel MinColumnWidth="220"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Margin="3"
+                                Background="#fffbe0"
+                                BorderThickness="0">
+
+                                <StackPanel>
+                                    <Image Source="{Binding Thumbnail}"
+                                           HorizontalAlignment="Stretch"
+                                           Stretch="Uniform"
+                                           SnapsToDevicePixels="True"
+                                           UseLayoutRounding="True"/>
+
+                                    <TextBlock Text="{Binding FileName}"
+                                           Margin="2"
+                                           TextAlignment="Center"
+                                           TextTrimming="CharacterEllipsis"/>
+                                </StackPanel>
+
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+
+        <!--状态栏-->
+        <Grid Grid.Row="2" Background="#151217">
+
+            <!-- 统计信息文字（在进度条上方，靠右） -->
+            <StackPanel Orientation="Horizontal"
+                HorizontalAlignment="Right">
+
+                <TextBlock Text="{Binding TotalImageCountAll, StringFormat='全部图片: {0}'}" Height="18"/>
+
+                <TextBlock Text="{Binding TotalImageCountCurrent, StringFormat='当前图片: {0}'}" Height="18"/>
+
+                <TextBlock Text="{Binding TotalAudioCount, StringFormat=音频: {0}}" Height="18"/>
+
+            </StackPanel>
+
+            <ProgressBar Minimum="0" Maximum="100"
+                         Value="{Binding LoadProgress, Mode=OneWay}"
+                         Visibility="{Binding IsLoadingThumbnails, Converter={StaticResource BooleanToVisibilityConverter}}"
+                         Height="3"
+                         BorderThickness="0"
+                         Foreground="Green"
+                         HorizontalAlignment="Stretch"
+                         VerticalAlignment="Bottom"/>
+
+        </Grid>
+
+    </Grid>
+</Window>
