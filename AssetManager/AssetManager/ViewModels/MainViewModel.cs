@@ -15,6 +15,9 @@ namespace AssetManager.ViewModels
         private readonly Dictionary<string, CancellationTokenSource> _thumbnailCtsMap = new();
         private FolderItem? _currentThumbnailFolder;
 
+        private readonly ThumbnailLoaderService _thumbnailLoader = new();
+        private CancellationTokenSource? _thumbnailCts;
+
         public MainViewModel() : this(new FileScannerService()) { }
 
         public MainViewModel(IFileScannerService fileScanner)
@@ -61,12 +64,9 @@ namespace AssetManager.ViewModels
         [RelayCommand]
         private void ExitApplication()
         {
-            foreach (var cts in _thumbnailCtsMap.Values)
-            {
-                cts.Cancel();
-                cts.Dispose();
-            }
-            _thumbnailCtsMap.Clear();
+            _thumbnailCts?.Cancel();
+            _thumbnailCts?.Dispose();
+
             Application.Current.Shutdown();
         }
 
@@ -101,38 +101,18 @@ namespace AssetManager.ViewModels
         {
             if (value == null) return;
 
-            // 取消上一个文件夹的缩略图加载
-            if (_currentThumbnailFolder != null && _currentThumbnailFolder != value)
-            {
-                if (_thumbnailCtsMap.TryGetValue(_currentThumbnailFolder.FullPath, out var oldCts))
-                {
-                    oldCts.Cancel();
-                    oldCts.Dispose();
-                    _thumbnailCtsMap.Remove(_currentThumbnailFolder.FullPath);
-                }
-            }
+            _thumbnailCts?.Cancel();
+            _thumbnailCts?.Dispose();
 
-            _currentThumbnailFolder = value;
-
-            // 同步加载文件列表
             var allFiles = _fileScanner.GetAllFiles(value);
             Resources = new ObservableCollection<ResourceItem>(allFiles);
 
-            // 启动缩略图加载
-            var cts = new CancellationTokenSource();
-            _thumbnailCtsMap[value.FullPath] = cts;
+            _thumbnailCts = new CancellationTokenSource();
 
-            foreach (var file in Resources)
-            {
-                if (cts.Token.IsCancellationRequested) break;
-                _ = file.LoadThumbnailAsync(cts.Token);
-            }
+            _ = _thumbnailLoader.LoadAsync(Resources, _thumbnailCts.Token);
 
-            // 通知状态栏相关属性变化
             OnPropertyChanged(nameof(TotalImageCountAll));
             OnPropertyChanged(nameof(TotalImageCountCurrent));
-            OnPropertyChanged(nameof(LoadProgress));
-            OnPropertyChanged(nameof(IsLoadingThumbnails));
         }
     }
 }

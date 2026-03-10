@@ -1,35 +1,43 @@
 ﻿using System.IO;
-using System.Windows.Media;
+using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 
-namespace AssetManager.Services
+namespace AssetManager.Services;
+
+public static class ThumbnailService
 {
-    public class ThumbnailService : IThumbnailService
+    /// <summary>
+    /// 异步生成指定宽度的缩略图，在解码阶段完成缩放，避免模糊和高内存占用。
+    /// </summary>
+    /// <param name="filePath">图像文件路径</param>
+    /// <param name="targetWidth">目标宽度（高度自动按比例）</param>
+    /// <returns>缩略图 BitmapSource，失败返回 null</returns>
+    public static async Task<BitmapSource?> GetThumbnail(string filePath, int targetWidth = 400)
     {
-        public static BitmapSource? GetThumbnail(string filePath)
+        if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+            return null;
+
+        // 在后台线程创建 BitmapImage（安全，因使用 OnLoad + Freeze）
+        return await Task.Run(() =>
         {
             try
             {
-                using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                var decoder = BitmapDecoder.Create(stream, BitmapCreateOptions.DelayCreation, BitmapCacheOption.OnLoad);
-                var frame = decoder.Frames[0];
-
-                const int thumbSize = 200;
-                var scale = Math.Min(thumbSize / (double)frame.PixelWidth, thumbSize / (double)frame.PixelHeight);
-                var width = (int)(frame.PixelWidth * scale);
-                var height = (int)(frame.PixelHeight * scale);
-
-                var transformed = new TransformedBitmap(frame, new ScaleTransform(scale, scale));
-                transformed.Freeze(); // ✅ 关键：冻结后可跨线程、节省内存
-
-                return transformed;
+                var bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                // 关键设置：解码时直接缩放到目标宽度
+                bitmap.DecodePixelWidth = targetWidth;
+                bitmap.UriSource = new Uri(filePath);
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;      // 立即加载并释放文件句柄
+                bitmap.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
+                bitmap.EndInit();
+                bitmap.Freeze(); // 使对象跨线程可用（可绑定到 UI）
+                return bitmap;
             }
             catch
             {
+                // 可选：记录日志
                 return null;
             }
-        }
-
-        BitmapSource? IThumbnailService.GetThumbnail(string filePath) => GetThumbnail(filePath);
+        });
     }
 }
