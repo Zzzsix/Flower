@@ -5,7 +5,7 @@ namespace AssetManager.Services;
 
 public class ThumbnailLoaderService
 {
-    private readonly SemaphoreSlim _semaphore = new(4);
+    private readonly SemaphoreSlim _semaphore = new(8);
 
     public async Task LoadAsync(
         ObservableCollection<ResourceItem> resources,

@@ -49,28 +49,17 @@ namespace AssetManager.Services
         // 递归获取文件夹下所有子文件
         public List<ResourceItem> GetAllFiles(FolderItem folder)
         {
-            var files = new List<string>();
+            var files = new List<ResourceItem>();
             CollectFiles(folder, files);
-
-            return files.Select(f => new ResourceItem
-            {
-                FilePath = f,
-                FileName = Path.GetFileName(f)  // ✅ 修正：使用 FileName
-            }).ToList();
+            return files;
         }
 
         // ✅ 新增：递归收集所有文件路径
-        private void CollectFiles(FolderItem folder, List<string> files)
+        private void CollectFiles(FolderItem folder, List<ResourceItem> files)
         {
-            foreach (var file in folder.Files)
-            {
-                files.Add(file.FilePath);
-            }
-
+            files.AddRange(folder.Files);
             foreach (var child in folder.Children)
-            {
                 CollectFiles(child, files);
-            }
         }
     }
 }

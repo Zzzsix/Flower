@@ -123,9 +123,7 @@
                 <TextBlock Text="{Binding TotalImageCountAll, StringFormat='全部图片: {0}'}" Height="18"/>
 
                 <TextBlock Text="{Binding TotalImageCountCurrent, StringFormat='当前图片: {0}'}" Height="18"/>
-
-                <TextBlock Text="{Binding TotalAudioCount, StringFormat=音频: {0}}" Height="18"/>
-
+                
             </StackPanel>
 
             <ProgressBar Minimum="0" Maximum="100"
@@ -133,7 +131,6 @@
                          Visibility="{Binding IsLoadingThumbnails, Converter={StaticResource BooleanToVisibilityConverter}}"
                          Height="3"
                          BorderThickness="0"
-                         Foreground="Green"
                          HorizontalAlignment="Stretch"
                          VerticalAlignment="Bottom"/>
 

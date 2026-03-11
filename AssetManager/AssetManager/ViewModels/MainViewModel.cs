@@ -12,9 +12,6 @@ namespace AssetManager.ViewModels
     public partial class MainViewModel : ObservableObject
     {
         private readonly IFileScannerService _fileScanner;
-        private readonly Dictionary<string, CancellationTokenSource> _thumbnailCtsMap = new();
-        private FolderItem? _currentThumbnailFolder;
-
         private readonly ThumbnailLoaderService _thumbnailLoader = new();
         private CancellationTokenSource? _thumbnailCts;
 
@@ -33,33 +30,6 @@ namespace AssetManager.ViewModels
 
         [ObservableProperty]
         private FolderItem? selectedFolder;
-
-        // ✅ 全部图片总数（所有已打开的根文件夹）
-        public int TotalImageCountAll
-        {
-            get
-            {
-                int total = 0;
-                foreach (var root in FolderTree)
-                {
-                    total += _fileScanner.GetAllFiles(root).Count;
-                }
-                return total;
-            }
-        }
-
-        // ✅ 当前选中文件夹的图片数
-        public int TotalImageCountCurrent =>
-            SelectedFolder != null ? _fileScanner.GetAllFiles(SelectedFolder).Count : 0;
-
-        // ✅ 缩略图加载进度（仅当前文件夹）
-        public double LoadProgress =>
-            Resources.Count > 0
-                ? (Resources.Count(r => r.Thumbnail != null) * 100.0 / Resources.Count)
-                : 0;
-
-        // ✅ 是否正在加载缩略图（用于控制进度条显示）
-        public bool IsLoadingThumbnails => Resources.Any(r => r.Thumbnail == null);
 
         [RelayCommand]
         private void ExitApplication()
@@ -85,6 +55,7 @@ namespace AssetManager.ViewModels
             {
                 var folderPath = Path.GetDirectoryName(dialog.FileName)!;
 
+                //避免重复添加相同根目录
                 if (FolderTree.Any(f => f.FullPath.Equals(folderPath, StringComparison.OrdinalIgnoreCase)))
                 {
                     SelectedFolder = FolderTree.First(f => f.FullPath.Equals(folderPath, StringComparison.OrdinalIgnoreCase));
@@ -108,11 +79,7 @@ namespace AssetManager.ViewModels
             Resources = new ObservableCollection<ResourceItem>(allFiles);
 
             _thumbnailCts = new CancellationTokenSource();
-
             _ = _thumbnailLoader.LoadAsync(Resources, _thumbnailCts.Token);
-
-            OnPropertyChanged(nameof(TotalImageCountAll));
-            OnPropertyChanged(nameof(TotalImageCountCurrent));
         }
     }
 }
