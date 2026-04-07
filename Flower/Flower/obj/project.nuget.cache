@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "66gIP476svE=",
+  "success": true,
+  "projectFilePath": "D:\\vs_projects\\Flower\\Flower\\Flower.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\qwe17\\.nuget\\packages\\communitytoolkit.mvvm\\8.4.2\\communitytoolkit.mvvm.8.4.2.nupkg.sha512",
+    "C:\\Users\\qwe17\\.nuget\\packages\\microsoft-windowsapicodepack-core\\1.1.5\\microsoft-windowsapicodepack-core.1.1.5.nupkg.sha512",
+    "C:\\Users\\qwe17\\.nuget\\packages\\microsoft-windowsapicodepack-shell\\1.1.5\\microsoft-windowsapicodepack-shell.1.1.5.nupkg.sha512"
+  ],
+  "logs": []
+}
