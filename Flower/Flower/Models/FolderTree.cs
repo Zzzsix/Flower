@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System.Collections.ObjectModel;
 
 namespace Flower.Models
 {
@@ -7,7 +8,10 @@ namespace Flower.Models
         public string Name { get; set; }
         public string FullPath { get; set; }
 
-        public ObservableCollection<FolderTree> Children { get; set; }
-            = new ObservableCollection<FolderTree>();
+        public FolderTree(string name, string fullPath)
+        {
+            Name = name;
+            FullPath = fullPath;
+        }
     }
 }

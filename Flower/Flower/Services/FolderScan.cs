@@ -5,42 +5,38 @@ namespace Flower.Services
 {
     public class FolderScan
     {
-        public FolderTree LoadFolder(string path)
+        public async Task<List<FolderTree>> GetSubFoldersAsync(string path)
         {
-            var root = new FolderTree
+            return await Task.Run(() =>
             {
-                Name = Path.GetFileName(path),
-                FullPath = path
-            };
+                var result = new List<FolderTree>();
 
-            LoadChildren(root);
+                try
+                {
+                    foreach (var dir in Directory.EnumerateDirectories(path))
+                    {
+                        result.Add(new FolderTree(
+                            Path.GetFileName(dir),
+                            dir
+                        ));
+                    }
+                }
+                catch { }
 
-            return root;
+                return result;
+            });
         }
 
-        private void LoadChildren(FolderTree parent)
+        //判断是否有子文件夹
+        public bool HasSubFolders(string path)
         {
             try
             {
-                var directories = Directory.GetDirectories(parent.FullPath);
-
-                foreach (var dir in directories)
-                {
-                    var child = new FolderTree
-                    {
-                        Name = Path.GetFileName(dir),
-                        FullPath = dir
-                    };
-
-                    parent.Children.Add(child);
-
-                    // 递归加载
-                    LoadChildren(child);
-                }
+                return Directory.EnumerateDirectories(path).Any();
             }
             catch
             {
-                // 权限问题直接忽略（行业标准做法）
+                return false;
             }
         }
     }
